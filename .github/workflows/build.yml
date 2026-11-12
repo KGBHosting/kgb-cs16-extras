@@ -1,0 +1,27 @@
+name: Build candidate
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        amxx: ['1.8.2', '1.9', '1.10']
+    steps:
+      - uses: actions/checkout@v7
+      - run: python3 -m unittest discover -s tests -v
+      - run: ./scripts/build.sh
+        env:
+          AMXX_VERSION: ${{ matrix.amxx }}
+      - run: python3 scripts/package.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: cs16-extras-amxx-${{ matrix.amxx }}-${{ github.sha }}
+          path: |
+            compiled/*.amxx
+            compiled/*.sha256
+            dist/*
+          if-no-files-found: error
