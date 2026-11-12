@@ -3,7 +3,7 @@
 #define HUB_MAX_MAPS 64
 #define HUB_VOTE_CHOICES 5
 new g_maps[HUB_MAX_MAPS][32], g_map_count
-new g_votes_enabled, g_vote_fraction, g_vote_min_players, g_vote_wait, g_vote_duration
+new g_votes_enabled, g_vote_fraction, g_vote_min_players, g_vote_wait, g_vote_duration, g_map_wait
 new bool:g_rtv[MAX_CLIENTS + 1], g_nomination[MAX_CLIENTS + 1]
 new bool:g_vote_active, bool:g_map_pending
 new g_vote_epoch, g_vote_eligible, g_vote_choices[HUB_VOTE_CHOICES], g_choice_count
@@ -18,6 +18,7 @@ stock votes_init()
     g_vote_min_players = register_cvar("kgb_hub_rtv_min_players", "2")
     g_vote_wait = register_cvar("kgb_hub_rtv_wait", "180")
     g_vote_duration = register_cvar("kgb_hub_vote_duration", "15")
+    g_map_wait = register_cvar("kgb_hub_map_wait", "900")
     register_clcmd("say /rtv", "command_rtv")
     register_clcmd("say_team /rtv", "command_rtv")
     register_clcmd("say /nominate", "command_nominate")
@@ -146,7 +147,9 @@ public command_rtv(id)
     new minimum = clamp(get_pcvar_num(g_vote_min_players), 2, MAX_CLIENTS)
     if (count < minimum) { client_print(id, print_chat, "[Maps] At least %d human players are required.", minimum); return PLUGIN_HANDLED; }
     if (!g_rtv[id]) { g_rtv[id] = true; requests++; }
-    new required = floatround(float(count) * floatclamp(get_pcvar_float(g_vote_fraction), 0.50, 1.0), floatround_ceil)
+    new Float:fraction = get_pcvar_float(g_vote_fraction)
+    if (!(fraction >= 0.50 && fraction <= 1.0)) fraction = 0.60
+    new required = floatround(float(count) * fraction, floatround_ceil)
     client_print(id, print_chat, "[Maps] %d of %d required players requested a vote.", requests, required)
     if (requests >= required) votes_start()
     return PLUGIN_HANDLED
@@ -184,7 +187,7 @@ stock votes_start()
     for (new id = 1; id <= g_maxplayers; id++)
     {
         new old_menu, new_menu
-        if (g_ballot_userid[id] && !get_user_menu(id, old_menu, new_menu)) command_vote(id)
+        if (g_ballot_userid[id] && !player_menu_info(id, old_menu, new_menu)) command_vote(id)
     }
     set_task(float(clamp(get_pcvar_num(g_vote_duration), 10, 30)), "votes_finish", TASK_VOTE_END)
 }
@@ -245,7 +248,14 @@ public votes_finish()
         client_print(0, print_chat, "[Maps] %s won. Changing in five seconds.", g_maps[g_pending_index])
         set_task(5.0, "votes_change_map", TASK_MAP_CHANGE)
     }
-    else client_print(0, print_chat, "[Maps] %s won. Changing when this round ends.", g_maps[g_pending_index])
+    else
+    {
+        // Waiting/infinite rounds must never lock future nominations forever.
+        // Never cut a live round merely because this deadline elapsed.
+        new wait = clamp(get_pcvar_num(g_map_wait), 30, 1800)
+        set_task(float(wait), "votes_pending_expired", TASK_MAP_EXPIRY)
+        client_print(0, print_chat, "[Maps] %s won. Changing at round end; cancelled if no round ends within %d seconds.", g_maps[g_pending_index], wait)
+    }
 }
 
 // Pure tally policy, shared with executable source-extraction regression tests.
@@ -272,8 +282,16 @@ public hub_round_end()
     if (g_map_pending && g_pending_mode != MODE_DEATHMATCH) votes_change_map()
 }
 
+public votes_pending_expired()
+{
+    if (!g_map_pending) return
+    g_map_pending = false
+    client_print(0, print_chat, "[Maps] No round ended before the map-vote deadline. This map continues; normal nomination and voting cooldown rules apply.")
+}
+
 public votes_change_map()
 {
+    remove_task(TASK_MAP_EXPIRY)
     if (!g_map_pending || !votes_allowed() || hub_mode() != g_pending_mode) { g_map_pending = false; return; }
     g_map_pending = false
     if (g_pending_index >= 0 && g_pending_index < g_map_count && map_token_safe(g_maps[g_pending_index]) && is_map_valid(g_maps[g_pending_index]))

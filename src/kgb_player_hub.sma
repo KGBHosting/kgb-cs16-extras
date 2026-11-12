@@ -9,6 +9,7 @@
 #define TASK_HINT 41900
 #define TASK_VOTE_END 41940
 #define TASK_MAP_CHANGE 41941
+#define TASK_MAP_EXPIRY 41942
 
 enum HubMode { MODE_OFF, MODE_PUBLIC, MODE_CLAN_WAR, MODE_DEATHMATCH, MODE_GUNGAME, MODE_ZOMBIE }
 new g_enabled, g_mode, g_join_hint, g_maxplayers
@@ -79,6 +80,7 @@ public plugin_end()
     }
     remove_task(TASK_VOTE_END)
     remove_task(TASK_MAP_CHANGE)
+    remove_task(TASK_MAP_EXPIRY)
 }
 
 public task_hint(task)

@@ -27,7 +27,9 @@ Departures cannot reduce its majority; late joins cannot vote. A majority of
 that electorate must choose a change, and one map must uniquely beat both the
 other maps and the keep-current option. Ties and abstention keep the current map.
 
-Public/Zombie changes wait for the actual round end. Deathmatch announces a
+Public/Zombie changes wait for the actual round end. If no round ends within
+`kgb_hub_map_wait` seconds (default 900, bounded 30–1800), the pending result is
+cancelled and voting reopens. Waiting/infinite rounds are never cut short. Deathmatch announces a
 five-second delay. Clan War and GunGame never enable map voting. The hub does
 not disable the server's own mapchooser or another community vote plugin:
 owners should run only one map-vote system. Automatic menus avoid existing UI;
@@ -52,7 +54,7 @@ their normal damage. These settings do not apply in another hub mode.
 
 Requires AMX Mod X with CStrike; Deathmatch additionally uses Fun, Fakemeta and
 Ham Sandwich. CI compiles against pinned 1.8.2, 1.9 and 1.10 compilers. KGB's
-development candidate uses the pinned 1.9 build and canonical ReHLDS runtime.
+development candidate uses the pinned 1.8.2 build on the canonical 1.9 ReHLDS runtime.
 
 1. Build with `AMXX_VERSION=1.9 ./scripts/build.sh`.
 2. Copy the desired `compiled/*.amxx` to `addons/amxmodx/plugins/` and add each

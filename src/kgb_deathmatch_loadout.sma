@@ -121,7 +121,7 @@ public task_loadout(task)
     else if (get_pcvar_num(g_auto_menu))
     {
         new old_menu, new_menu
-        if (!get_user_menu(id, old_menu, new_menu)) command_guns(id)
+        if (!player_menu_info(id, old_menu, new_menu)) command_guns(id)
         else client_print(id, print_chat, "[Deathmatch] Type /guns to choose and remember a loadout.")
     }
 }
