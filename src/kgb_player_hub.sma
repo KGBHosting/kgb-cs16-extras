@@ -183,14 +183,36 @@ public hub_handler(id, menu, item)
 public command_help(id)
 {
     if (!hub_player(id)) return PLUGIN_CONTINUE
-    client_print(id, print_chat, "[Server] /menu opens player options. /standings shows this map's score; no persistent player tracking.")
+    client_print(id, print_chat, "[Server] /menu opens player options. /standings shows map scores.")
+    client_print(id, print_chat, "[Server] Scores are for this map, with no persistent player tracking.")
     switch (hub_mode())
     {
-        case MODE_PUBLIC: client_print(id, print_chat, "[Public] Play the map objective with your team. /nominate picks a map; /rtv requests a map vote.")
-        case MODE_CLAN_WAR: client_print(id, print_chat, "[Clan War] /ready, /notready, /readylist and /score. Match administrators control warmup, knife rounds and match setup.")
-        case MODE_DEATHMATCH: client_print(id, print_chat, "[Deathmatch] Every player is an opponent. /guns remembers your stock loadout; later changes apply on your next spawn.")
-        case MODE_GUNGAME: client_print(id, print_chat, "[GunGame] Kill with your assigned weapon to advance. Finish with a grenade and knife. /level and /ggtop show progress.")
-        case MODE_ZOMBIE: client_print(id, print_chat, "[Zombie Infection] Humans survive the timer; zombie knife hits infect. Choose human weapons with /guns before infection. Zombies press N for night vision.")
+        case MODE_PUBLIC:
+        {
+            client_print(id, print_chat, "[Public] Play the map objective with your team.")
+            client_print(id, print_chat, "[Public] /nominate picks a map. /rtv requests a map vote.")
+        }
+        case MODE_CLAN_WAR:
+        {
+            client_print(id, print_chat, "[Clan War] /ready, /notready, /readylist and /score.")
+            client_print(id, print_chat, "[Clan War] Match admins control warmup, knife rounds and setup.")
+        }
+        case MODE_DEATHMATCH:
+        {
+            client_print(id, print_chat, "[Deathmatch] Every player is an opponent. /guns picks your stock loadout.")
+            client_print(id, print_chat, "[Deathmatch] Your choice is remembered; later changes apply next spawn.")
+        }
+        case MODE_GUNGAME:
+        {
+            client_print(id, print_chat, "[GunGame] Kill with your assigned weapon to advance.")
+            client_print(id, print_chat, "[GunGame] Finish with a grenade and knife. /level and /ggtop show progress.")
+        }
+        case MODE_ZOMBIE:
+        {
+            client_print(id, print_chat, "[Zombie Infection] Humans survive the timer. Zombie knife hits infect.")
+            client_print(id, print_chat, "[Zombie Infection] Choose human weapons with /guns before infection.")
+            client_print(id, print_chat, "[Zombie Infection] Zombies: press N for night vision.")
+        }
     }
     return PLUGIN_HANDLED
 }
